@@ -1,0 +1,933 @@
+<aura:component >
+    <aura:attribute type="String" name="message"/>
+	<div class="style1">
+    	Hello lightning component...
+    </div>
+    <div class="style2">
+    	{!v.message}
+    </div>
+</aura:component>
+
+---------------------------
+
+.THIS.style1 {
+    front-size:30px;
+    color:red;
+    font-family:calibri;
+}
+
+.THIS.style2 {
+    border:5px solid blue;
+    border-radius:20px;
+    width:70%;
+    background:orange;
+    text-align:center;
+    text-shadow:2px 2px white;
+    font-size:40px;
+    padding:20px;
+}
+
+-----------------
+
+extends="force:slds"
+
+===================
+
+
+
+
+
+
+
+
+
+
+
+<aura:component >
+	<aura:attribute name="itemName" type ="String" required ="true"/>
+    <aura:attribute name="itemType" type ="String" required="true"/>
+    <aura:attribute name="quanity" type="Integer" default="1"/>
+    <aura:attribute name="price" type="Double"/>
+    <div style="background:white;font-size:20px;border:10px solid red;">
+        Item Name - {!v.itemName} <br/>
+        Item Type - {!v.itemType} <br/>
+        Bill - {!v.price*v.quanity} <br/>
+        <aura:if isTrue="{!v.itemType=='Food'}">
+        	Discount is {!v.price*v.quanity*0.10} <br/>
+            Total bill is {!(v.price*v.quanity) - (v.price*v.quanity*0.10)} <br/>
+            <aura:set attribute="else">
+                <aura:if isTrue="{!v.itemType=='Drinks'}">
+                    Discount is {!v.price*v.quanity*0.05} <br/>
+                    Total bill is {!(v.price*v.quanity) - (v.price*v.quanity*0.05)} <br/>
+                    <aura:set attribute="else">
+                        Discount is {!v.price*v.quanity*0.15} <br/>
+                        Total bill is {!(v.price*v.quanity) - (v.price*v.quanity*0.15)} <br/>
+                    </aura:set>
+                </aura:if>
+            </aura:set>
+        </aura:if>         
+    </div>
+</aura:component>
+
+
+=========================================
+
+Use of list => Project component
+<aura:component >
+    <aura:attribute name="projName" type="String"/>
+    <aura:attribute name="locations" type="List"/>
+    <div style="background:white;font-size:20px;border:10px solid red;">
+        Project Name is : {!v.projName} <br/>
+        Locations are : 
+        <aura:if isTrue="{!empty(v.locations)}">
+            <strong>Locations are not assigned to this project</strong>
+            <aura:set attribute="else">
+                <aura:iteration items="{!v.locations}" var="loc">
+                    <li>{!loc}</li>
+                </aura:iteration>
+            </aura:set>
+        </aura:if>
+    </div>
+</aura:component>
+
+
+====================================================
+
+<aura:component controller="AccountController">
+    <aura:attribute name="acclist" type="List"/>
+    <div style="background:white;padding:20px;">
+    	<lightning:button label="Display Accounts" variant="brand"
+                          onclick="{!c.callaccount}"/> <br/>
+        <table class="slds-table slds-table--bordered">
+        	<tbody>
+                <aura:iteration items="{!v.acclist}" var="acc">
+                    <tr>
+                        <td>{!acc.Name}</td>
+                        <td>{!acc.AnnualRevenue}</td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+</aura:component>
+
+({
+	callaccount : function(component, event, helper) {
+		var rq = component.get("c.showAccounts");
+        $A.enqueueAction(rq);
+        
+        rq.setCallback(this,function(re) {
+            if(re.getState() == "SUCCESS") {
+                console.log('hello.. ');
+                var rs = re.getReturnValue();
+                console.log(rs);
+                component.set("v.acclist", rs);
+            } else if(re.getErrors().contains("Exception")) {
+                console.log("Exception " + re.getErrrors()[0]);
+            }
+        });
+	}
+})
+
+public with sharing class AccountController {
+    @AuraEnabled
+    public static List<Account> showAccounts() {
+        list <Account> accList  = [select Name, AnnualRevenue 
+                                   from Account
+                                   order by name 
+                                   limit :(Limits.getLimitQueryRows() - Limits.getQueryRows())];
+        system.debug('==' + accList.size());
+        return accList;
+    }
+}
+
+=======================================
+
+EventDemo
+
+<aura:component >
+    <aura:attribute name="msg" type="String"/>
+    <div style="background:white;border:10px solid red;">
+        <br/>
+        <lightning:button aura:id="b1" label="Show message" onclick="{!c.show}"/><br/><br/>
+        <span style="font-size:1in;" ondblclick="{!c.hide}">{!v.msg}</span>
+    </div>
+</aura:component>
+
+
+({
+	show : function(component, event, helper) {
+		
+        var btn = component.find("b1");
+        if(btn.get("v.label") === "Show message"){
+            component.set("v.msg","Hello all...");
+            btn.set("v.label", "Hide message from UI by double click");
+        } else {
+            component.set("v.msg","");
+            btn.set("v.label", "Show message");
+        }
+        
+	},
+    
+    hide : function(component, event, helper) {
+		comp"onent.set("v.msg",");
+        var btn = component.find("b1");
+        btn.set("v.label", "Show message");
+	}
+})
+
+
+===========================================
+
+Create a modal box, 
+
+Welcomebox 
+
+<aura:component >
+	<div>
+    	<div class="slds-modal slds-fade-in-open">
+        	<div class="slds-modal__container">
+            	<div style="text-align:right">
+                    <lightning:buttonIcon iconName="utility:close" 
+                                          alternativeText="close"
+                                          variant="bare-inverse"
+                                          size="large"
+                                          onclick="{!c.close}"/>
+                </div>
+                <div class="slds-modal__header">
+                	Welcome to Mobile App
+                </div>
+                <div class="slds-modal__content">
+                	<div style="height:100px;width:300px;" class="slds-align--absolute-center">
+                        {!$Label.c.Greeting}
+                    </div>
+                </div>
+                <div class="slds-modal__footer">
+                    <lightning:button label="Close" variant="brand" onclick="{!c.close}"/>
+                </div>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div>
+    </div>
+</aura:component>
+
+({
+	close : function(component, event, helper) {
+		$A.util.addClass(component,"slds-hide");
+	}
+})
+
+
+=============================================
+
+<aura:component controller="AccountController" implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" extends="c:DataCon">
+    <aura:attribute name="acc" Type="SObject"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doinit}"/>
+    <lightning:card title="Account Card" iconName="standard:account">
+        Account Name : {!v.acc.Name} <br/>
+        Type : {!v.acc.Type} <br/>
+        Revenue : {!v.acc.AnnualRevenue} <br/>
+        Billing City : {!v.acc.BillingCity} <br/>
+    </lightning:card>
+</aura:component>
+
+({
+	doinit : function(component, event, helper) {
+		var req = component.get("c.displayRecord");
+        req.setParams({"accId":component.get("v.recordId")});
+        $A.enqueueAction(req);
+        helper.handleResponse(component, req, "v.acc");
+	}
+})
+
+====================================
+DataCon - 
+
+<aura:component extensible="true">
+	{!v.body}
+</aura:component>
+
+DataConHelper.js
+({
+	handleResponse : function(component, request, target) {
+		request.setCallback(this,function(res){
+            if(res.getState()=="SUCCESS") {
+                component.set(target, res.getReturnValue());
+            }
+        })
+	}
+})
+
+=====================================
+
+AuraActionExChild.cmp
+
+<aura:component >
+    <aura:attribute name="theAction" type="Aura.Action" />
+    
+    <lightning:button variant="brand" label="Click me!" onclick="{!v.theAction}"/>
+</aura:component>
+
+---------------
+
+AuraActionExParent.cmp
+
+<aura:component >
+    <c:AuraActionExChild theAction="{!c.sum}"/>
+    <c:AuraActionExChild theAction="{!c.multiply}"/>
+</aura:component>
+
+
+AuraActionParentExController.js
+
+({
+    sum : function(component, event, helper) {
+        alert('I am summing!');
+    },
+    multiply : function(component, event, helper) {
+        alert('I am multiplying!');
+    }
+})
+
+
+=====================================
+
+<!-- Add this component to an account record Lightning page -->
+<aura:component implements="flexipage:availableForRecordHome, force:hasRecordId">
+    <aura:attribute name="recordId" type="String" />
+    <lightning:card title="Display, Create, or Edit Records">
+        <lightning:recordForm recordId="{!v.recordId}" 
+                              objectApiName="Account"
+                              fields="Name,AccountNumber" />
+    </lightning:card>
+</aura:component>
+
+=====================================================
+
+<!-- Add this component to an account record Lightning page -->
+<aura:component implements="flexipage:availableForRecordHome, force:hasRecordId">
+    <lightning:card title="Display, Create, or Edit Records">
+        <lightning:recordEditForm recordId="{!v.recordId}"
+                                  objectApiName="Account">
+            <lightning:messages />
+            <lightning:inputField fieldName="Name" />
+            <lightning:button class="slds-m-top_small" type="submit" label="Create new" />
+        </lightning:recordEditForm>
+        <lightning:recordViewForm recordId="{!v.recordId}" objectApiName="Account">
+            <lightning:messages />
+            <lightning:outputField fieldName="Name" />
+        </lightning:recordViewForm>
+    </lightning:card>
+</aura:component>
+
+
+======================================
+
+
+<aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" >
+    <aura:attribute name="recordId" type="String" />
+    <lightning:button label="Edit Record" onclick="{!c.edit}"/>
+</aura:component>
+
+edit : function(component, event, helper) {
+    var editRecordEvent = $A.get("e.force:editRecord");
+    editRecordEvent.setParams({
+        "recordId": component.get("v.recordId")
+    });
+    editRecordEvent.fire();
+}
+
+==========================
+Create contact from account page - quick action 
+
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId">
+
+    <aura:attribute name="account" type="Object"/>
+    <aura:attribute name="simpleAccount" type="Object"/>
+    <aura:attribute name="accountError" type="String"/>
+    <force:recordData aura:id="accountRecordLoader"
+        recordId="{!v.recordId}"
+        fields="Name,BillingCity,BillingState"
+        targetRecord="{!v.account}"
+        targetFields="{!v.simpleAccount}"
+        targetError="{!v.accountError}"
+    />
+
+    <aura:attribute name="newContact" type="Object" access="private"/>
+    <aura:attribute name="simpleNewContact" type="Object" access="private"/>
+    <aura:attribute name="newContactError" type="String" access="private"/>
+    <force:recordData aura:id="contactRecordCreator"
+        layoutType="FULL"
+        targetRecord="{!v.newContact}"
+        targetFields="{!v.simpleNewContact}"
+        targetError="{!v.newContactError}"
+        />
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <!-- Display a header with details about the account -->
+    <div class="slds-page-header" role="banner">
+        <p class="slds-text-heading_label">{!v.simpleAccount.Name}</p>
+        <h1 class="slds-page-header__title slds-m-right_small
+            slds-truncate slds-align-left">Create New Contact</h1>
+    </div>
+
+    <!-- Display Lightning Data Service errors, if any -->
+    <aura:if isTrue="{!not(empty(v.accountError))}">
+        <div class="recordError">
+            <ui:message title="Error" severity="error" closable="true">
+                {!v.accountError}
+            </ui:message>
+        </div>
+    </aura:if>
+    <aura:if isTrue="{!not(empty(v.newContactError))}">
+        <div class="recordError">
+            <ui:message title="Error" severity="error" closable="true">
+                {!v.newContactError}
+            </ui:message>
+        </div>
+    </aura:if>
+
+    <!-- Display the new contact form -->
+     <lightning:input aura:id="contactField" name="firstName" label="First Name"
+                     value="{!v.simpleNewContact.FirstName}" required="true"/>
+  
+    <lightning:input aura:id="contactField" name="lastname" label="Last Name"
+                  value="{!v.simpleNewContact.LastName}" required="true"/>
+            
+    <lightning:input aura:id="contactField" name="title" label="Title"
+                  value="{!v.simpleNewContact.Title}" />
+    
+    <lightning:input aura:id="contactField" type="phone" name="phone" label="Phone Number"
+                     pattern="^(1?(-?\d{3})-?)?(\d{3})(-?\d{4})$"
+                     messageWhenPatternMismatch="The phone number must contain 7, 10, or 11 digits. Hyphens are optional."
+                   value="{!v.simpleNewContact.Phone}" required="true"/>
+    
+    <lightning:input aura:id="contactField" type="email" name="email" label="Email"
+                value="{!v.simpleNewContact.Email}" />
+        
+    <lightning:button label="Cancel" onclick="{!c.handleCancel}" class="slds-m-top_medium" />
+    <lightning:button label="Save Contact" onclick="{!c.handleSaveContact}"
+               variant="brand" class="slds-m-top_medium"/>
+     
+    
+</aura:component>
+
+----------------
+
+({
+    doInit: function(component, event, helper) {
+        component.find("contactRecordCreator").getNewRecord(
+            "Contact", // objectApiName
+            null, // recordTypeId
+            false, // skip cache?
+            $A.getCallback(function() {
+                var rec = component.get("v.newContact");
+                var error = component.get("v.newContactError");
+                if(error || (rec === null)) {
+                    console.log("Error initializing record template: " + error);
+                }
+                else {
+                    console.log("Record template initialized: " + rec.apiName);
+                }
+            })
+        );
+    },
+
+    handleSaveContact: function(component, event, helper) {
+        if(helper.validateContactForm(component)) {
+            component.set("v.simpleNewContact.AccountId", component.get("v.recordId"));
+            component.find("contactRecordCreator").saveRecord(function(saveResult) {
+                if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+
+                    // Success! Prepare a toast UI message
+                    var resultsToast = $A.get("e.force:showToast");
+                    resultsToast.setParams({
+                        "title": "Contact Saved",
+                        "message": "The new contact was created."
+                    });
+
+                    // Update the UI: close panel, show toast, refresh account page
+                    $A.get("e.force:closeQuickAction").fire();
+                    resultsToast.fire();
+
+                    // Reload the view so components not using force:recordData
+                    // are updated
+                    $A.get("e.force:refreshView").fire();
+                }
+                else if (saveResult.state === "INCOMPLETE") {
+                    console.log("User is offline, device doesn't support drafts.");
+                }
+                else if (saveResult.state === "ERROR") {
+                    console.log('Problem saving contact, error: ' +
+                                 JSON.stringify(saveResult.error));
+                }
+                else {
+                    console.log('Unknown problem, state: ' + saveResult.state +
+                                ', error: ' + JSON.stringify(saveResult.error));
+                }
+            });
+        }
+    },
+
+    handleCancel: function(component, event, helper) {
+        $A.get("e.force:closeQuickAction").fire();
+    },
+})
+
+------------
+
+({
+    validateContactForm: function(component) {
+        var validContact = true;
+
+         // Show error messages if required fields are blank
+        var allValid = component.find('contactField').reduce(function (validFields, inputCmp) {
+            inputCmp.showHelpMessageIfInvalid();
+            return validFields && inputCmp.get('v.validity').valid;
+        }, true);
+
+        if (allValid) {
+            // Verify we have an account to attach it to
+            var account = component.get("v.account");
+            if($A.util.isEmpty(account)) {
+                validContact = false;
+                console.log("Quick action context doesn't have a valid account.");
+            }
+        	return(validContact);
+            
+        }  
+	}
+       
+})
+
+====================
+
+<aura:component implements="force:appHostable,
+flexipage:availableForRecordHome,force:hasRecordId" 
+access="global" >
+
+	<aura:attribute name="account" type="Object" 
+	  description="The record object to be displayed"/>
+	<aura:attribute name="accountRecord" type="Object" 
+	  description="A simplified view record object to be displayed"/>
+	<aura:attribute name="recordSaveError" type="String" 
+	  description="An error message bound to force:recordData"/>
+    
+    <force:recordData aura:id="accRec" 
+        layoutType="FULL" 
+		recordId="{!v.recordId}"  
+		targetError="{!v.recordSaveError}"
+		targetRecord="{!v.account}"
+		targetFields="{!v.accountRecord}"
+		mode="EDIT"
+		 recordUpdated="{!c.recordUpdated}"/>
+    
+     <div class="slds-box"> 
+        <div class="slds-text-heading_medium">
+            Edit Account - Data Service
+        </div> 
+        <div class="slds-form--stacked slds-tile"> 
+            <div class="slds-form-element">
+                <label class="slds-form-element__label"  >Name: </label>
+                <div class="slds-form-element__control">
+               		<ui:inputText aura:id="recordName"  class="slds-input"  
+                                value="{!v.accountRecord.Name}"
+                                required="true"/>
+                </div>
+            </div>
+             <div class="slds-form-element">
+                 <label class="slds-form-element__label"  >Company Email: </label>
+                 <div class="slds-form-element__control">
+               		<ui:inputText aura:id="companyEmail"  class="slds-input"  
+                                value="{!v.accountRecord.Company_Email__c}"
+                                required="true"/>
+                 </div>
+            </div>
+            <div class="slds-form-element">
+               <ui:button aura:id="saveAccount" 
+                buttonTitle="Save Account" class="button" label="Save Account" press="{!c.saveAccount}"/>
+            </div>
+        </div>
+        
+           <aura:if isTrue="{!not(empty(v.recordSaveError))}">
+               <br />
+            <div class="error slds-box">
+                 {!v.recordSaveError}
+            </div> 
+        </aura:if>
+    </div>
+</aura:component>
+
+-----
+
+.THIS .error {
+    background-color: #c23934;
+        border: 1px solid #c23934 ;
+        color: white;
+}
+
+----
+
+({
+	saveAccount : function(component, event, helper) {
+		 helper.saveAccount(component, event, helper);
+	},
+    recordUpdated : function(component, event, helper) {
+		 helper.recordUpdated(component, event, helper);
+	}
+})
+
+-----
+
+({
+	saveAccount : function(component, event, helper) {
+		component.find("accRec").saveRecord($A.getCallback(function(saveResult) {
+            if (saveResult.state === "SUCCESS" || saveResult.state === "DRAFT") {
+                console.log("Save completed successfully.");
+            } else if (saveResult.state === "INCOMPLETE") {
+                component.set("v.recordSaveError","User is offline, device doesn't support drafts.");
+            } else if (saveResult.state === "ERROR") { 
+                var errMsg = "";
+                // saveResult.error is an array of errors, 
+                // so collect all errors into one message
+                for (var i = 0; i < saveResult.error.length; i++) {
+                    errMsg += saveResult.error[i].message + "\n";
+                }
+                component.set("v.recordSaveError", errMsg);
+                
+            } else {
+                component.set("v.recordSaveError",'Unknown problem, state: ' + saveResult.state + ', error: ' + 
+			      JSON.stringify(saveResult.error));
+            }
+        }));
+	},
+    recordUpdated : function(component, event, helper){
+        var changeType = event.getParams().changeType;
+		if (changeType === "CHANGED") {
+            component.find("accRec").reloadRecord();
+        }
+    }
+})
+
+========================
+
+App(lcvfTest.app) =>
+<aura:application access="GLOBAL" extends="ltng:outApp"> 
+    <aura:dependency resource="lightning:button"/>
+</aura:application>
+
+----
+
+VF page => 
+
+<apex:page>
+    <apex:includeLightning />
+
+    <div id="lightning" />
+
+    <script>
+        $Lightning.use("c:lcvfTest", function() {
+          $Lightning.createComponent("lightning:button",
+              { label : "Press Me!" },
+              "lightning",
+              function(cmp) {
+                console.log("button was created");
+                // do some stuff
+              }
+          );
+        });
+    </script>
+</apex:page>
+
+=================================
+
+public class DataDisplayController {
+	public String PDFData {get; set;} 
+    
+    public DataDisplayController(){
+        PDFData = '';
+    }
+    
+    public PageReference downloadPDF(){
+        System.PageReference pageRef = new System.PageReference('/apex/PDFGenerator');
+    
+        //ensure pdf downloads and is assigned with defined name
+        pageRef.getHeaders().put('content-disposition', 'attachment; filename=TestPDF.pdf');
+     
+        return pageRef;
+    }
+}
+
+--------------
+
+DataProcessor.cmp
+
+<aura:component >
+
+   <!-- attribute to accept Visualforce page's javascript method -->
+   <aura:attribute name="sendData" type="object"/>
+
+   <!-- Button component to invoke PDF download -->
+   <lightning:button label="Download Document" onclick="{!c.downloadDocument}" />
+</aura:component>
+
+----------
+
+DataProcessorController.js
+
+({
+ downloadDocument : function(component, event, helper){
+
+  var sendDataProc = component.get("v.sendData");
+  var dataToSend = {
+     "label" : "This is test"
+  }; //this is data you want to send for PDF generation
+
+  //invoke vf page js method
+  sendDataProc(dataToSend, function(){
+              //handle callback
+  });
+ }
+})
+
+-----------
+
+LightningPDFGeneratorDemo.vfp
+
+<apex:page controller="DataDisplayController" showHeader="false">
+
+    <apex:includeLightning />
+    
+	<!-- Page code -->
+    <apex:form>
+		<apex:inputhidden id="hidData" value="{!PDFData}"/>
+    
+    	<apex:actionfunction name="jsGeneratePDF" action="{!downloadPDF}" />
+        
+        <div id="lightning" />
+        
+    <script>
+    	function saveData(data, callback){
+            var hidData = document.getElementById('{!$Component.hidData}');
+            hidData.value = JSON.stringify(data);
+            
+            //invoke PDF Generation
+            jsGeneratePDF();
+         
+            //invoke callback;
+            if(typeof callback == 'function') callback();
+        }
+        
+    	
+    	function loadComponents(){
+            console.log("Loading lightning component: DataProcessor");
+            
+            $Lightning.use("c:LightningPDFGeneratorDemoApp", function() {
+                $Lightning.createComponent("c:DataProcessor",
+                { 
+                    sendData : saveData
+                },
+                "lightning",
+                function(cmp) {
+                    // do some stuff
+                });
+            });
+        }
+		
+		loadComponents();
+    </script>
+    </apex:form>
+</apex:page>
+
+---------------
+
+LightningPDFGeneratorDemoApp.app
+
+<aura:application  extends="ltng:outApp">
+    <c:DataProcessor />
+    
+</aura:application>
+
+--------------
+
+PDFGenerator.vfp
+
+<apex:page controller="DataDisplayController" renderAs="pdf">
+    {!PDFData}
+</apex:page>
+
+==================================================
+**************************************************
+COMPONENT EVENT...
+
+<aura:event type="COMPONENT" description="Event template">
+    <aura:attribute name="eventparam" type="String"/>
+</aura:event>
+
+--------------------
+
+Child Component (ChildComp.cmp)...
+
+<aura:component >
+    <aura:attribute name="msg" type="String"/>
+    <aura:registerEvent name="ce" type="c:CompEvent"/>
+    <div style="height:200px;width:200px;background:yellow;">
+    	<span style="font-size:20px;">Child Component</span>
+        <lightning:input label="Enter Message" value="{!v.msg}"/>
+        <lightning:button label="Send Message" onclick="{!c.send}"/>
+    </div>
+</aura:component>
+
+
+({
+	send : function(component, event, helper) {
+		var datac = component.get("v.msg");
+        var ev = component.getEvent("ce");
+        ev.setParams({"eventparam":datac});
+        ev.fire();
+	}
+})
+
+--------------------
+
+Parent Component (ParentComp.cmp)...
+
+<aura:component >
+    <aura:attribute name="childMsg" type="String"/>
+    <aura:handler name="ce" event="c:CompEvent" action="{!c.show}"/>
+    <div style="height:500px;width:500px;background:lime;">
+        <span style="font-size:50px;">Parent Component</span><br/>
+        <c:ChildComp/><br/>
+        <span style="font-size:50px;">{!v.childMsg}</span><br/>
+    </div>
+</aura:component>
+
+
+
+({
+	show : function(component, event, helper) {
+        component.set("v.childMsg", event.getParams().eventparam);
+        console.log('v.childMsg..' + component.get("v.childMsg"));
+        event.stopPropagation();
+	}
+})
+
+---------------------
+
+Grand Parent (GrandParent.cmp)
+
+<aura:component >
+    <aura:attribute name="childMsg" type="String"/>
+    <aura:handler name="ce" event="c:CompEvent" action="{!c.show}"/>
+    <div style="height:600px;width:600px;background:red;">
+        <span style="font-size:50px;">Grand Parent Component</span><br/>
+        <c:ParentComp/><br/>
+        <span style="font-size:20px;">{!v.childMsg}</span><br/>
+    </div>
+</aura:component>
+
+
+({
+	show : function(component, event, helper) {
+        console.log('Hello..');
+		component.set("v.childMsg", event.getParams().eventparam);
+        console.log('v.childMsg..' + component.get("v.childMsg"));
+	}
+})
+
+---------------------------
+
+<!--c:owner-->
+<aura:component>
+    <c:container>
+        <c:helloWorld />
+    </c:container>
+</aura:component>
+
+
+
+************************************
+APP EVENT 
+
+AppEvent.evt
+<aura:event type="APPLICATION" description="Event template">
+    <aura:attribute name="aparam" type="String"/>
+    <aura:attribute name="isSearch" type="Boolean" default="false"/>
+</aura:event>
+
+----------------------------------
+Search.cmp
+
+<aura:component >
+    <aura:registerEvent name="appEvent" type="c:AppEvent"/>
+	<div class="slds-form slds-form--stacked">
+        <lightning:input label="Search Contact" type="search" onkeyup="{!c.search}"
+                         aura:id="searchString"/>
+    </div>
+</aura:component>
+
+
+({
+	search : function(component, event, helper) {
+		var ev = $A.get("e.c:AppEvent");
+        ev.setParams({"aparam":component.find("searchString").get("v.value"),"isSearch":true});
+        ev.fire();
+	}
+})
+
+-----------------------------------
+TechnicianDetails.cmp
+
+<aura:component controller="ContactController" extends="c:DataCon">
+    <aura:attribute name="clist" type="List"/>
+    <aura:handler event="c:AppEvent" action="c.show"/>
+    <div>
+    	<table class="slds-table slds-table--bordered">
+        	<tbody>
+            	<aura:iteration items="{!v.clist}" var="c">
+                	<tr>
+                    	<td>{!c.FirstName}</td>
+                        <td>{!c.LastName}</td>
+                        <td>{!c.Email}</td>
+                        <td>{!c.MailingState}</td>
+                    </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+    </div>
+</aura:component>
+
+
+({
+	show : function(component, event, helper) {
+        if(event.getParams().isSearch) {
+            var req = component.get("c.showTechniciansBySearch");
+            req.setParams({"searchString":event.getParams().aparam});
+            $A.enqueueAction(req);
+            req.setCallback(this,function(res){
+                if(res.getState()=="SUCCESS") {
+                    component.set("v.clist", res.getReturnValue());
+                }
+            })
+            console.log(JSON.parse(JSON.stringify(component.get("v.clist"))));
+        } else {
+            var req = component.get("c.showTechniciansByState");
+            req.setParams({"conState":event.getParams().aparam});
+            $A.enqueueAction(req);
+            helper.handleResponse(component,req,"v.clist")
+        }
+	}
+})
+
+----------------------
+
+SearchContainer..
+
+<aura:component >
+	<c:Search/>
+    <br/>
+    <c:TechnicianDetails/>
+</aura:component>
+
+***********************************
